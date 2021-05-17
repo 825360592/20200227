@@ -1,0 +1,138 @@
+正在比较文件 base.ipynb 和 Q4/Q4.IPYNB
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q4/Q4.IPYNB
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+***** Q4/Q4.IPYNB
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[33m05 11:55:52[mgb] \u001b[0m\u001b[1;31mWRN cuda unavailable: CUDA driver version is insufficient for CUDA runti
+me version(35) ndev=-1\u001b[0m\n",
+      "\u001b[32m05 11:55:52 \u001b[0mload_serialized_obj_from_url: download to or using cached /home/megstudio/.cache/megengin
+e/serialized/009607_resnet18_naiveaug_70312_78a63ca6.pkl\n",
+      "  0%|                                              | 0.00/46.8M [00:00<?, ?iB/s]\u001b[32m05 11:55:52 \u001b[0mDownload 
+file to temp file /home/megstudio/.cache/megengine/serialized/tmptuuwhkrd.tmp\n",
+      "100%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻坾 46
+.8M/46.8M [00:02<00:00, 15.7MiB/s]\n"
+     ]
+    }
+   ],
+   "source": [
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q4/Q4.IPYNB
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q4/Q4.IPYNB
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+*****
+
+***** base.ipynb
+    "\n",
+    "target = cv2.imread('pic.jpg', cv2.IMREAD_COLOR)\n",
+    "target = np.float32(trans.apply(target)[np.newaxis, :] / 255)\n",
+***** Q4/Q4.IPYNB
+    "\n",
+    "target = cv2.imread('./workspace/pic.jpg', cv2.IMREAD_COLOR)\n",
+    "target = np.float32(trans.apply(target)[np.newaxis, :] / 255)\n",
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q4/Q4.IPYNB
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+*****
+
+***** base.ipynb
+    "'''浣犻渶瑕佸畬鍠勮鏂规硶'''\n",
+    "def get_l2_gram_loss_for_layer(target, noise, layer):\n",
+    "\n",
+***** Q4/Q4.IPYNB
+    "'''浣犻渶瑕佸畬鍠勮鏂规硶'''\n",
+    "#def get_l2_gram_loss_for_layer(target, noise, layer):\n",
+    "def EMD(target, noise, layer):\n",
+    "    sorted_target,indeces = F.sort(target.reshape(-1))\n",
+    "    sorted_noise,indeces = F.sort(noise.reshape(-1))\n",
+    "    rst = F.sum(F.square(sorted_target - sorted_noise))\n",
+    "    return rst\n",
+    "\n",
+*****
+
+***** base.ipynb
+    "    gram_loss = 0\n",
+    "    for layer in layers:\n",
+    "        gram_loss += get_l2_gram_loss_for_layer(target[layer], noise[layer], layer)\n",
+    "    return gram_loss / 5.0"
+   ]
+***** Q4/Q4.IPYNB
+    "    gram_loss = 0\n",
+    "    #for layer in layers:\n",
+    "    gram_loss += EMD(target[\"stem\"], noise[\"stem\"], \"stem\")\n",
+    "    gram_loss += EMD(target[\"res2\"], noise[\"res2\"], \"res2\")\n",
+    "    return gram_loss / 2"
+   ]
+*****
+
+***** base.ipynb
+   "metadata": {},
+   "outputs": [],
+   "source": [
+***** Q4/Q4.IPYNB
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "training process:  65%|鈻堚枅鈻堚枅鈻堚枅鈻?  | 19468/30000 [1:38:33<55:04,  3.19it/s, loss=0.00190, lr=0.00100]  "
+     ]
+    }
+   ],
+   "source": [
+*****
+
+***** base.ipynb
+    "            output = output.transpose(1, 2, 0)\n",
+    "            cv2.imwrite('./output_images/output{}.jpg'.format(int(epoch / 1000)), output)"
+   ]
+***** Q4/Q4.IPYNB
+    "            output = output.transpose(1, 2, 0)\n",
+    "            cv2.imwrite('./workspace/output_images/output{}.jpg'.format(int(epoch / 1000)), output)"
+   ]
+*****
+

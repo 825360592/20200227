@@ -1,0 +1,146 @@
+正在比较文件 base.ipynb 和 Q2/Q2.IPYNB
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q2/Q2.IPYNB
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+***** Q2/Q2.IPYNB
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[33m03 20:02:42[mgb] \u001b[0m\u001b[1;31mWRN cuda unavailable: CUDA driver version is insufficient for CUDA runti
+me version(35) ndev=-1\u001b[0m\n",
+      "\u001b[32m03 20:02:42 \u001b[0mload_serialized_obj_from_url: download to or using cached /home/megstudio/.cache/megengin
+e/serialized/009607_resnet18_naiveaug_70312_78a63ca6.pkl\n"
+     ]
+    }
+   ],
+   "source": [
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q2/Q2.IPYNB
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q2/Q2.IPYNB
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q2/Q2.IPYNB
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+*****
+
+***** base.ipynb
+    "\n",
+    "'''浣犻渶瑕佸畬鍠勮鏂规硶'''\n",
+    "def get_l2_gram_loss_for_layer(target, noise, layer):\n",
+    "\n",
+***** Q2/Q2.IPYNB
+    "\n",
+    "import megengine.functional as F\n",
+    "'''浣犻渶瑕佸畬鍠勮鏂规硶'''\n",
+    "target_cache = dict()\n",
+    "def get_l2_gram_loss_for_layer(target, noise, layer):\n",
+    "    global target_cache\n",
+    "    batch,channel,width,height = target.shape\n",
+    "    pixels = width*height\n",
+    "    \n",
+    "    G = None\n",
+    "    if layer in target_cache:\n",
+    "        G = target_cache[layer]\n",
+    "    else:\n",
+    "        A = target.reshape(channel,width*height)\n",
+    "        G = F.matmul(A,A.T).reshape(-1)\n",
+    "        target_cache[layer] = G\n",
+    "    \n",
+    "    B = noise.reshape(channel,width*height)\n",
+    "    G_hat = F.matmul(B,B.T).reshape(-1)\n",
+    "    \n",
+    "    return F.nn.square_loss(G,G_hat)/(4*pixels*pixels)\n",
+    "\n",
+*****
+
+***** base.ipynb
+    "def get_gram_loss(target,noise):\n",
+    "    layers = {\"stem\", \"res2\", \"res3\", \"res4\", \"res5\"}\n",
+    "    gram_loss = 0\n",
+    "    for layer in layers:\n",
+***** Q2/Q2.IPYNB
+    "def get_gram_loss(target,noise):\n",
+    "    #layers = {\"stem\", \"res2\", \"res3\", \"res4\", \"res5\"}\n",
+    "    #gram_loss = 0\n",
+    "    '''\n",
+    "    for layer in layers:\n",
+*****
+
+***** base.ipynb
+    "        gram_loss += get_l2_gram_loss_for_layer(target[layer], noise[layer], layer)\n",
+    "    return gram_loss / 5.0"
+***** Q2/Q2.IPYNB
+    "        gram_loss += get_l2_gram_loss_for_layer(target[layer], noise[layer], layer)\n",
+    "    '''\n",
+    "    gram_loss = get_l2_gram_loss_for_layer(target[\"stem\"], noise[\"stem\"], \"stem\") + \\\n",
+    "                get_l2_gram_loss_for_layer(target[\"res2\"], noise[\"res2\"], \"res2\") + \\\n",
+    "                get_l2_gram_loss_for_layer(target[\"res3\"], noise[\"res3\"], \"res3\") + \\\n",
+    "                get_l2_gram_loss_for_layer(target[\"res4\"], noise[\"res4\"], \"res4\") + \\\n",
+    "                get_l2_gram_loss_for_layer(target[\"res5\"], noise[\"res5\"], \"res5\")\n",
+    "    return gram_loss / 5.0"
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+***** Q2/Q2.IPYNB
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "training process: 100%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅| 30000/30000 [2:56:40<00:00,  2.83it/s, loss=0.00040, lr=0.00100] 
+ \n"
+     ]
+    }
+   ],
+   "source": [
+*****
+

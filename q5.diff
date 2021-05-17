@@ -1,0 +1,194 @@
+正在比较文件 base.ipynb 和 Q5/Q5.IPYNB
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q5/Q5.IPYNB
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+***** Q5/Q5.IPYNB
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[33m05 10:02:27[mgb] \u001b[0m\u001b[1;31mWRN cuda unavailable: CUDA driver version is insufficient for CUDA runti
+me version(35) ndev=-1\u001b[0m\n",
+      "\u001b[32m05 10:02:27 \u001b[0mload_serialized_obj_from_url: download to or using cached /home/megstudio/.cache/megengin
+e/serialized/009607_resnet18_naiveaug_70312_78a63ca6.pkl\n"
+     ]
+    }
+   ],
+   "source": [
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q5/Q5.IPYNB
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q5/Q5.IPYNB
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+*****
+
+***** base.ipynb
+    "\n",
+    "target = cv2.imread('pic.jpg', cv2.IMREAD_COLOR)\n",
+    "target = np.float32(trans.apply(target)[np.newaxis, :] / 255)\n",
+***** Q5/Q5.IPYNB
+    "\n",
+    "target = cv2.imread('./workspace/pic.jpg', cv2.IMREAD_COLOR)\n",
+    "target = np.float32(trans.apply(target)[np.newaxis, :] / 255)\n",
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+***** Q5/Q5.IPYNB
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+*****
+
+***** base.ipynb
+    "\n",
+    "'''浣犻渶瑕佸畬鍠勮鏂规硶'''\n",
+    "def get_l2_gram_loss_for_layer(target, noise, layer):\n",
+    "\n",
+***** Q5/Q5.IPYNB
+    "\n",
+    "import megengine.functional as F\n",
+    "'''浣犻渶瑕佸畬鍠勮鏂规硶'''\n",
+    "target_cache = dict()\n",
+    "def get_l2_gram_loss_for_layer(target, noise, layer):\n",
+    "    global target_cache\n",
+    "    batch,channel,width,height = target.shape\n",
+    "    pixels = width*height\n",
+    "    \n",
+    "    G = None\n",
+    "    if layer in target_cache:\n",
+    "        G = target_cache[layer]\n",
+    "    else:\n",
+    "        A = target.reshape(channel,width*height)\n",
+    "        G = F.matmul(A,A.T).reshape(-1)\n",
+    "        target_cache[layer] = G\n",
+    "    \n",
+    "    B = noise.reshape(channel,width*height)\n",
+    "    G_hat = F.matmul(B,B.T).reshape(-1)\n",
+    "    \n",
+    "    return F.nn.square_loss(G,G_hat)/(4*pixels*pixels)\n",
+    "\n",
+*****
+
+***** base.ipynb
+    "def get_gram_loss(target,noise):\n",
+    "    layers = {\"stem\", \"res2\", \"res3\", \"res4\", \"res5\"}\n",
+    "    gram_loss = 0\n",
+    "    for layer in layers:\n",
+    "        gram_loss += get_l2_gram_loss_for_layer(target[layer], noise[layer], layer)\n",
+    "    return gram_loss / 5.0"
+   ]
+***** Q5/Q5.IPYNB
+    "def get_gram_loss(target,noise):\n",
+    "    '''\n",
+    "    gram_loss = get_l2_gram_loss_for_layer(target[\"stem\"], noise[\"stem\"], \"stem\") + \\\n",
+    "                get_l2_gram_loss_for_layer(target[\"res2\"], noise[\"res2\"], \"res2\") + \\\n",
+    "                get_l2_gram_loss_for_layer(target[\"res3\"], noise[\"res3\"], \"res3\") + \\\n",
+    "                get_l2_gram_loss_for_layer(target[\"res4\"], noise[\"res4\"], \"res4\") + \\\n",
+    "                get_l2_gram_loss_for_layer(target[\"res5\"], noise[\"res5\"], \"res5\")\n",
+    "    '''\n",
+    "    gram_loss = 0.4 * get_l2_gram_loss_for_layer(target[\"stem\"], noise[\"stem\"], \"stem\") + \\\n",
+    "                0.6 * get_l2_gram_loss_for_layer(target[\"res2\"], noise[\"res2\"], \"res2\")\n",
+    "    \n",
+    "    return gram_loss\n",
+    "\n",
+    "def tv_loss(noise):\n",
+    "    mat = tensor(noise[0])\n",
+    "    c,h,w = mat.shape\n",
+    "\n",
+    "    up = F.concat([mat[:,0].reshape(-1,1,w), mat],axis=1)\n",
+    "    down = F.concat([mat,mat[:,-1].reshape(-1,1,w)],axis=1)\n",
+    "    up_diff = up - down\n",
+    "    up_diff = up_diff[:,1:,:]\n",
+    "\n",
+    "    left = F.concat([mat[:,:,0].reshape(-1,h,1), mat],axis=2)\n",
+    "    right = F.concat([mat,mat[:,:,-1].reshape(-1,h,1)],axis=2)\n",
+    "    left_diff = left - right\n",
+    "    left_diff = left_diff[:,:,1:]\n",
+    "    \n",
+    "    #鐢变簬tv loss鐨勭郴鏁拌璁惧緱寰堝ぇ锛屾墍浠ヨ繖閲屽共鑴嗕笉闄*h*w浜嗐�俓n",
+    "    tv = F.sum(F.sqrt(F.square(up_diff)+F.square(left_diff)+1))/(c*h*w)\n",
+    "    \n",
+    "    return tv/500"
+   ]
+*****
+
+***** base.ipynb
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+***** Q5/Q5.IPYNB
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "training process: 100%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅| 30000/30000 [1:44:28<00:00,  4.79it/s, loss=0.002004099, lr=0.001
+00]\n"
+     ]
+    }
+   ],
+   "source": [
+*****
+
+***** base.ipynb
+    "            noise_features = resnet18.extract_features(noise)\n",
+    "            loss = get_gram_loss(target_features, noise_features)\n",
+    "            tq.set_postfix({'loss' : '{0:1.5f}'.format(loss.numpy().item()),'lr':'{0:1.5f}'.format(lr)}) \n",
+    "            tq.update(1)\n",
+***** Q5/Q5.IPYNB
+    "            noise_features = resnet18.extract_features(noise)\n",
+    "            loss = get_gram_loss(target_features, noise_features) + tv_loss(noise)\n",
+    "            tq.set_postfix({'loss' : '{0:1.9f}'.format(loss.numpy().item()),'lr':'{0:1.5f}'.format(lr)}) \n",
+    "            tq.update(1)\n",
+*****
+
+***** base.ipynb
+    "            output = output.transpose(1, 2, 0)\n",
+    "            cv2.imwrite('./output_images/output{}.jpg'.format(int(epoch / 1000)), output)"
+   ]
+***** Q5/Q5.IPYNB
+    "            output = output.transpose(1, 2, 0)\n",
+    "            cv2.imwrite('./workspace/output_images/output{}.jpg'.format(int(epoch / 1000)), output)"
+   ]
+*****
+
